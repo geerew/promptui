@@ -44,6 +44,8 @@ type Prompt struct {
 	// IsVimMode enables vi-like movements (hjkl) and editing.
 	IsVimMode bool
 
+	NoSuccessMessage bool
+
 	// the Pointer defines how to render the cursor.
 	Pointer Pointer
 
@@ -218,7 +220,7 @@ func (p *Prompt) Run() (string, error) {
 		return "", err
 	}
 
-	echo := cur.Format()
+	echo := cur.Get()
 	if p.Mask != 0 {
 		echo = cur.FormatMask(p.Mask)
 	}
@@ -235,7 +237,13 @@ func (p *Prompt) Run() (string, error) {
 	}
 
 	sb.Reset()
-	sb.Write(prompt)
+
+	if p.NoSuccessMessage == false {
+		sb.Write(prompt)
+	} else {
+		sb.Clear()
+	}
+
 	sb.Flush()
 	rl.Write([]byte(showCursor))
 	rl.Close()
@@ -317,7 +325,7 @@ func (p *Prompt) prepareTemplates() error {
 	tpls.validation = tpl
 
 	if tpls.Success == "" {
-		tpls.Success = fmt.Sprintf("{{ . | faint }}%s ", Styler(FGFaint)(":"))
+		tpls.Success = fmt.Sprint("")
 	}
 
 	tpl, err = template.New("").Funcs(tpls.FuncMap).Parse(tpls.Success)
